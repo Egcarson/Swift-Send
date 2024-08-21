@@ -1,0 +1,70 @@
+DEVELOPING SWIFT SEND ENTITY AND ATTRIBUTES
+
+
+USER ROLES (ENUM): # not table
+    customer = "customer"
+    courier = "courier"
+    admin = "admin"
+
+
+DELIVERY STATUS (ENUM): #not table
+    pending = "pending"
+    picked_up = "picked_up"
+    in_transit = "in_transit"
+    delivered = "delivered"
+    canceled = "canceled"
+
+
+USER TABLE:
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr # will be used as username for login
+    phone_number: str
+    city: str
+    password: str
+    role: default to customer
+    is_active: bool = False
+
+
+ADDRESS TABLE:
+    id: int
+    street_address: str
+    city: str
+    state: Optional[str] = None
+    zip_code: Optional[str] = None
+    country: str
+
+
+PACKAGE TABLE: # if there's more attributes please signify
+    id: int
+    weight: float # will be defaulted to max digits of 5 and a decimal place of 2 so please indicate the weight value expected
+    dimensions: Optional[str] = None 
+    description: Optional[str] = None
+    value: Optional[DECIMAL] = None # is value needed?
+
+
+DELIVERY TABLE:
+    id: int
+    status: default to pending
+    user_id: int
+    package: PackageResponse
+    pickup_address: AddressResponse
+    dropoff_address: AddressResponse
+    created_at: datetime
+    updated_at: datetime
+
+
+STATUS TABLE:
+    status: DeliveryStatus
+    delivery_id: int
+    id: int
+    timestamp: datetime
+
+
+##### ENV FILE DETAILS
+.env file: (change the database information with yours)
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:yourpas@localhost/swift_send"
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
