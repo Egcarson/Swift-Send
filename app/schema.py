@@ -92,8 +92,11 @@ class AddressUpdate(AddressBase):
 class Address(AddressBase):
     id: int
 
+    model_config = ConfigDict(from_attributes=True)
 
 # ## schema for Packages
+
+
 class PackageBase(BaseModel):
     item_name: str
     weight: float
@@ -112,6 +115,8 @@ class PackageUpdate(PackageBase):
 class Package(PackageBase):
     id: int
     user_id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 # ## schema for Delivery
 
@@ -140,8 +145,10 @@ class Delivery(DeliveryBase):
     delivery_address: Address
     delivery_status: DeliveryStatus = DeliveryStatus.PENDING
 
+    model_config = ConfigDict(from_attributes=True)
 
 # ## schema for Status
+
 
 class StatusBase(BaseModel):
     status: DeliveryStatus
