@@ -1,16 +1,17 @@
-import enum
 from pydantic import BaseModel, ConfigDict, EmailStr, condecimal
 from typing import Optional
 from datetime import datetime
+from enum import Enum
+# from app.models import UserFunc
 
 
-class UserRole(str, enum):
+class UserFunc(str, Enum):
     CUSTOMER = "customer"
     COURIER = "courier"
     ADMIN = "admin"
 
 
-class DeliveryStatus(str, enum):
+class DeliveryStatus(str, Enum):
     PENDING = "pending"
     PICKED_UP = "picked_up"
     IN_TRANSIT = "in_transit"
@@ -18,7 +19,7 @@ class DeliveryStatus(str, enum):
     CANCELLED = "cancelled"
 
 
-class PaymentMethod(str, enum):
+class PaymentMethod(str, Enum):
     DEBIT_CARD = "debit_card"
     PAYSTACK = "paystack"
     BANK_TRANSFER = "bank_transfer"
@@ -32,20 +33,21 @@ class UserBase(BaseModel):
     last_name: str
     email: EmailStr
     phone_number: str
-    city: str
-    role: UserRole = UserRole.CUSTOMER
-
 
 class UserCreate(UserBase):
     password: str
 
 
-class UserUpdate(UserBase):
-    pass
+class UserUpdate(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone_number: str
 
 
 class User(UserBase):
     id: int
+    role: UserFunc
     is_active: bool = False
     created_at: datetime
 

@@ -5,20 +5,52 @@ from typing import Optional
 from app import schema, models, utils
 
 # ## function for creating a user
-
-
 def create_user(user_payload: schema.UserCreate, db: Session = Depends()):
     hashed_password = utils.hash_password(password=user_payload.password)
     user_payload.password = hashed_password
+
+    role_asign = schema.UserFunc.CUSTOMER
+
     new_user = models.User(**user_payload.model_dump())
+    new_user.role = role_asign
+
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
 
+# ## function to create an admin user
+def create_admin_user(user_payload: schema.UserCreate, db: Session = Depends()):
+    hashed_password = utils.hash_password(password=user_payload.password)
+    user_payload.password = hashed_password
+
+    role_asign = schema.UserFunc.ADMIN
+
+    new_user = models.User(**user_payload.model_dump())
+    new_user.role = role_asign
+    new_user.is_active = True
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# ## function to create courier/driver account
+def create_courier_user(user_payload: schema.UserCreate, db: Session = Depends()):
+    hashed_password = utils.hash_password(password=user_payload.password)
+    user_payload.password = hashed_password
+
+    role_asign = schema.UserFunc.COURIER
+
+    new_user = models.User(**user_payload.model_dump())
+    new_user.role = role_asign
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+
 # ## function for getting all users
-
-
 def get_users(db: Session = Depends(), skip: int = 0, limit: int = 10, search: Optional[str] = ""):
     users = db.query(models.User).filter(models.User.last_name.contains(
         search) | models.User.first_name.contains(search)).offset(skip).limit(limit).all()

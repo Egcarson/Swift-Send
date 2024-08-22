@@ -1,31 +1,30 @@
-import enum
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Float, Enum, Numeric
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
-
+from app.schema import UserFunc, DeliveryStatus, PaymentMethod
 from app.database import Base
 
 
-class UserRole(enum.Enum):
-    CUSTOMER = "customer"
-    COURIER = "courier"
-    ADMIN = "admin"
+# class UserFunc(enum.Enum):
+#     CUSTOMER = "customer"
+#     COURIER = "courier"
+#     ADMIN = "admin"
 
 
-class DeliveryStatus(enum.Enum):
-    PENDING = "pending"
-    PICKED_UP = "picked_up"
-    IN_TRANSIT = "in_transit"
-    DELIVERED = "delivered"
-    CANCELLED = "cancelled"
+# class DeliveryStatus(enum.Enum):
+#     PENDING = "pending"
+#     PICKED_UP = "picked_up"
+#     IN_TRANSIT = "in_transit"
+#     DELIVERED = "delivered"
+#     CANCELLED = "cancelled"
 
 
-class PaymentMethod(enum.Enum):
-    DEBIT_CARD = "debit_card"
-    PAYSTACK = "paystack"
-    BANK_TRANSFER = "bank_transfer"
-    CASH_ON_DELIVERY = "cash_on_delivery"
+# class PaymentMethod(enum.Enum):
+#     DEBIT_CARD = "debit_card"
+#     PAYSTACK = "paystack"
+#     BANK_TRANSFER = "bank_transfer"
+#     CASH_ON_DELIVERY = "cash_on_delivery"
 
 
 class User(Base):
@@ -36,14 +35,14 @@ class User(Base):
     last_name = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     phone_number = Column(String, nullable=False)
-    city = Column(String, nullable=False)
     password = Column(String, nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.CUSTOMER)
+    role = Column(Enum(UserFunc), nullable=False, default=UserFunc.CUSTOMER)
     is_active = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP(timezone=True),
                         nullable=False, server_default=text('now()'))
 
     address = relationship("Address", back_populates="user")
+    deliveries = relationship("Delivery", back_populates="user")
 
 
 class Address(Base):
@@ -71,6 +70,8 @@ class Package(Base):
     dimensions = Column(String)
     description = Column(String)
 
+    deliveries = relationship("Delivery", back_populates="package")
+
 
 class Delivery(Base):
     __tablename__ = "deliveries"
@@ -94,6 +95,7 @@ class Delivery(Base):
 
     user = relationship("User", back_populates="deliveries")
     package = relationship("Package", back_populates="deliveries")
+    status = relationship("Status", back_populates="deliveries")
     pickup_address = relationship("Address", foreign_keys=[pickup_address_id])
     delivery_address = relationship(
         "Address", foreign_keys=[delivery_address_id])
@@ -108,4 +110,4 @@ class Status(Base):
     updated_at = Column(TIMESTAMP(timezone=True),
                         server_default=text('now()'), onupdate=text('now()'))
 
-    delivery = relationship("Delivery", back_populates="status")
+    deliveries = relationship("Delivery", back_populates="status")

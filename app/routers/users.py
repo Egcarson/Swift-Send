@@ -42,6 +42,7 @@ def update_user(user_id: int, user_payload: schema.UserUpdate, db: Session = Dep
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
     user_update = user_crud.update_user(user_id, user_payload, db)
     return user_update
 

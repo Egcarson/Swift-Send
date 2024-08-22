@@ -3,8 +3,8 @@ from app import models
 from app.database import engine
 from app.routers import users, auth
 
-# for reloading database. but i prefer using alembic for backwards compatibility. so lets comment this out
-# models.Base.metadata.create_all(bind=engine)
+# for pushing tables to the database. comment this out if you are using alembic
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
