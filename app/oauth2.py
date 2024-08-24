@@ -14,7 +14,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 SECRET_KEY = os.environ.get('SECRET_KEY')
 ALGORITHM = os.environ.get('ALGORITHM')
-ACCESS_TOKEN_EXPIRATION_TIME = 30
+ACCESS_TOKEN_EXPIRATION_TIME = int(os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES'))
 
 # ## access token
 def create_access_token(data: dict, expire_lift: Optional[timedelta] = None):
@@ -39,7 +39,7 @@ def verify_access_token(token: str, credential_exception):
 
         if not user:
             raise credential_exception
-        decoded_token = schema.TokenData(id=user) #if this throws an error cast the user to str
+        decoded_token = schema.TokenData(id=str(user)) #if this throws an error cast the user to str
      
     except JWTError as e:
         print(e)
