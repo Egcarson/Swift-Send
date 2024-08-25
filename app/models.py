@@ -50,7 +50,7 @@ class Address(Base):
     __tablename__ = "addresses"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
     address_line1 = Column(String, nullable=False)
     address_line2 = Column(String, nullable=True)
     city = Column(String, nullable=False)

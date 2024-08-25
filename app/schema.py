@@ -77,7 +77,7 @@ class PassReset(BaseModel):
 
 
 class AddressBase(BaseModel):
-    user_id: int
+    # user_id: int (commented it out because it will be added authomatically to the database by get current user)
     address_line1: str
     address_line2: Optional[str]
     city: str

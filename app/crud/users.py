@@ -68,6 +68,8 @@ def get_user_by_id(id: int, db: Session = Depends()):
 # ## function for updating a user
 
 
+
+
 def update_user(id: int, user_payload: schema.UserUpdate, db: Session = Depends()):
     user = get_user_by_id(id, db)
     if not user:
