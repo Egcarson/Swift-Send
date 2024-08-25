@@ -18,6 +18,15 @@ def create_user(user_payload: schema.UserCreate, db: Session = Depends(database.
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists")
     
+    
+    # validating phone number
+    phone_number = user_payload.phone_number
+    if len(phone_number) != 11:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid phone number. Please enter a valid 11-digit phone number."
+        )
+    
     ## setting up a password check instance
     if user_payload.first_name == user_payload.password or user_payload.last_name == user_payload.password or len(user_payload.password) == 7 or (user_payload.first_name + user_payload.last_name == user_payload.password) or user_payload.phone_number == user_payload.password:
         raise HTTPException(
@@ -39,6 +48,14 @@ def create_admin(user_payload: schema.UserCreate, db: Session = Depends(database
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists")
+
+    # validating phone number
+    phone_number = user_payload.phone_number
+    if len(phone_number) != 11:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid phone number. Please enter a valid 11-digit phone number."
+        )
     
     ## setting up a password check instance
     if user_payload.first_name == user_payload.password or user_payload.last_name == user_payload.password or len(user_payload.password) == 7 or (user_payload.first_name + user_payload.last_name) == user_payload.password or user_payload.phone_number == user_payload.password:
@@ -60,6 +77,14 @@ def create_courier(user_payload: schema.UserCreate, db: Session = Depends(databa
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists")
+    
+    # validating phone number
+    phone_number = user_payload.phone_number
+    if len(phone_number) != 11:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid phone number. Please enter a valid 11-digit phone number."
+        )
 
     ## setting up a password check instance
     if user_payload.first_name == user_payload.password or user_payload.last_name == user_payload.password or len(user_payload.password) == 7 or (user_payload.first_name + user_payload.last_name == user_payload.password) or user_payload.phone_number == user_payload.password:

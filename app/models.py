@@ -35,6 +35,7 @@ class User(Base):
     last_name = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     phone_number = Column(String, nullable=False)
+    city = Column(String, nullable=True, server_default=text('Lagos'))
     password = Column(String, nullable=False)
     role = Column(Enum(UserFunc), nullable=False, default=UserFunc.CUSTOMER)
     is_active = Column(Boolean, default=False)
@@ -50,7 +51,7 @@ class Address(Base):
     __tablename__ = "addresses"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     address_line1 = Column(String, nullable=False)
     address_line2 = Column(String, nullable=True)
     city = Column(String, nullable=False)
@@ -98,19 +99,19 @@ class Delivery(Base):
 
     user = relationship("User", back_populates="deliveries")
     package = relationship("Package", back_populates="deliveries")
-    status = relationship("Status", back_populates="deliveries")
+    # status = relationship("Status", back_populates="deliveries")
     pickup_address = relationship("Address", foreign_keys=[pickup_address_id])
     delivery_address = relationship(
         "Address", foreign_keys=[delivery_address_id])
 
 
-class Status(Base):
-    __tablename__ = "status"
+# class Status(Base):
+#     __tablename__ = "status"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    delivery_id = Column(Integer, ForeignKey("deliveries.id", ondelete="CASCADE"), nullable=False)
-    status = Column(Enum(DeliveryStatus))
-    updated_at = Column(TIMESTAMP(timezone=True),
-                        server_default=text('now()'), onupdate=text('now()'))
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     delivery_id = Column(Integer, ForeignKey("deliveries.id", ondelete="CASCADE"), nullable=False)
+#     status = Column(Enum(DeliveryStatus))
+#     updated_at = Column(TIMESTAMP(timezone=True),
+#                         server_default=text('now()'), onupdate=text('now()'))
 
-    deliveries = relationship("Delivery", back_populates="status")
+#     deliveries = relationship("Delivery", back_populates="status")

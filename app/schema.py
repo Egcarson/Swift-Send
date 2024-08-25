@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, condecimal
+from pydantic import BaseModel, ConfigDict, EmailStr, condecimal, field_validator
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -32,7 +32,8 @@ class UserBase(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
-    phone_number: str
+    phone_number: str = "09034793278"
+    city: Optional[str] = "Lagos"
 
 class UserCreate(UserBase):
     password: str
@@ -77,7 +78,6 @@ class PassReset(BaseModel):
 
 
 class AddressBase(BaseModel):
-    # user_id: int (commented it out because it will be added authomatically to the database by get current user)
     address_line1: str
     address_line2: Optional[str]
     city: str
@@ -96,7 +96,7 @@ class AddressUpdate(AddressBase):
 
 class Address(AddressBase):
     id: int
-
+    user_id: int
     model_config = ConfigDict(from_attributes=True)
 
 # ## schema for Packages
@@ -119,37 +119,48 @@ class PackageUpdate(PackageBase):
 
 class Package(PackageBase):
     id: int
-    user_id: int
-    user: User
+    user: UserResponse
 
     model_config = ConfigDict(from_attributes=True)
+
+class PackageResponse(PackageBase):
+    id: int
 
 # ## schema for Delivery
 
 
 class DeliveryBase(BaseModel):
     payment_method: PaymentMethod = PaymentMethod.CASH_ON_DELIVERY
+    pickup_address_id: int
+    delivery_address_id: int
     created_at: datetime
 
 
 class DeliveryCreate(DeliveryBase):
-    pickup_address_id: int
-    delivery_address_id: int
+    pass
+
+class DeliveryStatusUpdate(BaseModel):
+    delivery_status: DeliveryStatus = DeliveryStatus.PENDING
+    updated_at: datetime
 
 
 class DeliveryUpdate(DeliveryBase):
-    service_cost: Optional[condecimal(max_digits=10, decimal_places=2)] = None # type: ignore
+    pass
+
+
+class DeliveryCostUpdate(BaseModel):
+    service_cost: Optional[condecimal(max_digits=10, decimal_places=2)] = "0.00" # type: ignore
     updated_at: datetime
 
 
 class Delivery(DeliveryBase):
     id: int
-    user_id: int
-    package_id: int
-    service_cost: Optional[condecimal(max_digits=10, decimal_places=2)] = None  # type: ignore
-    package: Package
+    user: UserResponse
+    service_cost: Optional[condecimal(max_digits=10, decimal_places=2)] = "0.00"  # type: ignore
+    package: PackageResponse
     pickup_address: Address
     delivery_address: Address
+    updated_at: datetime
     delivery_status: DeliveryStatus = DeliveryStatus.PENDING
 
     model_config = ConfigDict(from_attributes=True)
@@ -157,14 +168,15 @@ class Delivery(DeliveryBase):
 # ## schema for Status
 
 
-class StatusBase(BaseModel):
-    status: DeliveryStatus
+# class StatusBase(BaseModel):
+#     status: DeliveryStatus
 
 
-class StatusCreate(StatusBase):
-    delivery_id: int
+# class StatusCreate(StatusBase):
+#     pass
 
 
-class Status(StatusBase):
-    id: int
-    updated_at: datetime
+# class Status(StatusBase):
+#     id: int
+#     user_id: int
+#     updated_at: datetime

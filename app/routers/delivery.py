@@ -19,18 +19,129 @@ def add_delivery(package_id: int, payload: schema.DeliveryCreate, db: Session = 
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Package not found"
         )
-    
+
     # ## validating availability of addresses
-    if not payload.pickup_address_id and not payload.delivery_address_id:
+    if not payload.pickup_address_id or not payload.delivery_address_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Addresses are required to create a delivery"
         )
-    
-    delivery = delv_crud.create_delivery(package_id, payload, current_user.id, db)
 
-    
-    
+    # ## validate availability of delivery before creating another one
+    delivery = delv_crud.get_delivery_by_package_id(package_id, db)
+    if delivery:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Delivery for this package has been processed already"
+        )
+
+    # ## create delivery
+    delivery = delv_crud.create_delivery(
+        package_id, payload, current_user.id, db)
+
     return delivery
 
 # ## endpoint for getting all deliveries
+@router.get('/deliveries', status_code=status.HTTP_200_OK, response_model=List[schema.Delivery])
+def get_deliveries(offset: int = 0, limit: int = 10, db: Session = Depends(database.get_db)):
+    deliveries = delv_crud.get_deliveries(offset, limit, db)
+    return deliveries
+
+# ## getting delivery by id
+@router.get('/deliveries/{delivery_id}', status_code=status.HTTP_200_OK, response_model=schema.Delivery)
+def get_delivery_by_id(delivery_id: int, db: Session = Depends(database.get_db)):
+
+    # ### validate availability of delivery
+    delivery = delv_crud.get_delivery_by_id(delivery_id, db)
+
+    if not delivery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sorry, there is no delivery available"
+        )
+    
+    return delivery
+
+
+# ## for updating delivery information
+@router.put('/deliveries/{delivery_id}', status_code=status.HTTP_202_ACCEPTED, response_model=schema.Delivery)
+def update_delivery(delivery_id: int, payload: schema.DeliveryCreate, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+    # ## validating the availability of requested delivery id
+    delivery = delv_crud.get_delivery_by_id(delivery_id, db)
+    if not delivery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Error! The delivery info you requested does not exist"
+        )
+
+    # ## validate user
+    if delivery.user_id != int(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not allowed to edit the requested information."
+        )
+
+    delivery_update = delv_crud.update_delivery(delivery.id, payload, db)
+
+    return delivery_update
+
+## status endpoints
+@router.put('/deliveries/status/{delivery_id}', status_code=status.HTTP_202_ACCEPTED, response_model=schema.Delivery)
+def update_delivery_status(delivery_id: int, payload: schema.DeliveryStatusUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+
+    # validating delivery
+    delivery = delv_crud.get_delivery_by_id(delivery_id, db)
+    
+    if not delivery:
+        raise HTTPException(
+            status_code=404, 
+            detail="The delivery information you are trying to update does not exist"
+        )
+    
+    # ## enforcing update to be done by courier or admin users only
+    user = user_crud.get_user_by_id(current_user.id, db)
+
+    admin_user = schema.UserFunc.ADMIN
+    courier_user = schema.UserFunc.COURIER
+
+    if user.role != admin_user and user.role != courier_user:
+        raise HTTPException(
+            status_code=406,
+            detail="Error! Please you are not allowed to perform this action."
+        )
+    
+    status = delv_crud.update_delivery_status(delivery_id, payload, db)
+
+    return status
+
+# this endpoint is updating the delivery fee
+@router.put('/deliveries/delivery_fee/{delivery_id}', status_code=status.HTTP_202_ACCEPTED, response_model=schema.Delivery)
+def update_delivery_status(delivery_id: int, payload: schema.DeliveryCostUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+
+    # validating delivery
+    delivery = delv_crud.get_delivery_by_id(delivery_id, db)
+    
+    if not delivery:
+        raise HTTPException(
+            status_code=404, 
+            detail="The delivery information you are trying to update does not exist"
+        )
+    
+    # ## enforcing update to be done by courier or admin users only
+    user = user_crud.get_user_by_id(current_user.id, db)
+
+    admin_user = schema.UserFunc.ADMIN
+    courier_user = schema.UserFunc.COURIER
+
+    if user.role != admin_user and user.role != courier_user:
+        raise HTTPException(
+            status_code=406,
+            detail="Error! Please you are not allowed to perform this action."
+        )
+    
+    delivery_fee = delv_crud.update_delivery_fee(delivery_id, payload, db)
+
+    return delivery_fee

@@ -14,13 +14,6 @@ router = APIRouter(
 
 @router.post('/address', status_code=status.HTTP_201_CREATED, response_model=schema.Address)
 def create_user_address(address_payload: schema.AddressCreate, db: Session = Depends(database.get_db), current_user: schema.User = Depends(oauth2.get_current_user)):
-    existing_address = address_crud.get_address_by_id(user_id=current_user.id, db=db)
-    # Checking if the user haven't added address already
-    if existing_address:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User already has an address"
-        )
     
     new_address = address_crud.create_address(user_id=current_user.id, address_payload=address_payload, db=db)
     return new_address

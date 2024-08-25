@@ -47,10 +47,10 @@ def update_package(package_id: int, payload: schema.PackageUpdate, db: Session =
         )
 
     # ## allowing admin users to edit the package
-    amin_role = schema.UserFunc.ADMIN
+    admin_role = schema.UserFunc.ADMIN
     user = user_crud.get_user_by_id(current_user.id, db)
 
-    if user.role == amin_role:
+    if user.role == admin_role:
         # ## update package
         updated_package = package_crud.update_package(package_id, payload, db)
         return updated_package
