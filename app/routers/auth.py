@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
-from app import database, schema, oauth2
+from app import database, schema, oauth2, utils
 from app.crud import users as user_crud
 
 router = APIRouter(
@@ -98,6 +98,17 @@ def password_reset(payload: schema.PassReset, db: Session = Depends(database.get
     # checking if the user is sure about the password
     if payload.new_password != payload.confirm_password:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords do not match")
+    
+    # checking if the user is trying to resue thesame password
+    if utils.verify_password(payload.new_password, user.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This is your previous password. Please use something stronger")
+    
+    ## setting up a password check instance
+    if user.first_name == payload.new_password or user.last_name == payload.new_password or len(payload.new_password) == 7 or (user.first_name + user.last_name == payload.new_password) or user.phone_number == payload.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password is too weak! Please make it stronger for security reasons."
+        )
     
     # updating the user password
     user_crud.update_password(payload, db)

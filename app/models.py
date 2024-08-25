@@ -41,6 +41,7 @@ class User(Base):
     created_at = Column(TIMESTAMP(timezone=True),
                         nullable=False, server_default=text('now()'))
 
+    package = relationship("Package", back_populates="user")
     address = relationship("Address", back_populates="user")
     deliveries = relationship("Delivery", back_populates="user")
 
@@ -58,6 +59,7 @@ class Address(Base):
     country = Column(String, nullable=False)
 
     user = relationship("User", back_populates="address")
+    
 
 
 class Package(Base):
@@ -71,6 +73,7 @@ class Package(Base):
     description = Column(String)
 
     deliveries = relationship("Delivery", back_populates="package")
+    user = relationship("User", back_populates="package")
 
 
 class Delivery(Base):

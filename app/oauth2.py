@@ -39,7 +39,7 @@ def verify_access_token(token: str, credential_exception):
 
         if not user:
             raise credential_exception
-        decoded_token = schema.TokenData(id=user) #if this throws an error cast the user to str
+        decoded_token = schema.TokenData(id=str(user)) #if this throws an error cast the user to str
      
     except JWTError as e:
         print(e)
