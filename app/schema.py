@@ -53,6 +53,9 @@ class User(UserBase):
 
     model_config = ConfigDict(from_attributes=True)
 
+class UserResponse(BaseModel):
+    first_name: str
+    last_name: str
 
 # ## schema for Token Generation
 class Token(BaseModel):
@@ -117,6 +120,7 @@ class PackageUpdate(PackageBase):
 class Package(PackageBase):
     id: int
     user_id: int
+    user: User
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -129,19 +133,20 @@ class DeliveryBase(BaseModel):
 
 
 class DeliveryCreate(DeliveryBase):
-    package_id: int
     pickup_address_id: int
     delivery_address_id: int
 
 
 class DeliveryUpdate(DeliveryBase):
-    service_cost: condecimal(max_digits=10, decimal_places=2)  # type: ignore
+    service_cost: Optional[condecimal(max_digits=10, decimal_places=2)] = None # type: ignore
     updated_at: datetime
 
 
 class Delivery(DeliveryBase):
     id: int
     user_id: int
+    package_id: int
+    service_cost: Optional[condecimal(max_digits=10, decimal_places=2)] = None  # type: ignore
     package: Package
     pickup_address: Address
     delivery_address: Address
