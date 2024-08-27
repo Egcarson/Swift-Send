@@ -3,10 +3,13 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from app import database, schema, models, oauth2
 from app.crud import users as user_crud, packages as package_crud
+from app.logs.logger import get_logger
 
 router = APIRouter(
     tags=["Packages"]
 )
+
+logger = get_logger()
 
 # ## endpoint for creating packages
 
@@ -16,6 +19,7 @@ def create_package(payload: schema.PackageCreate, db: Session = Depends(database
 
     new_package = package_crud.create_package(payload, current_user.id, db)
 
+    logger.info(f"Package '{new_package.name}' created by user '{current_user.username}'")
     return new_package
 
 # ## endpoint for retrieving all package
@@ -24,6 +28,7 @@ def create_package(payload: schema.PackageCreate, db: Session = Depends(database
 @router.get('/packages', status_code=status.HTTP_200_OK, response_model=List[schema.Package])
 def get_packages(offset: int = 0, limit: int = 10, db: Session = Depends(database.get_db)):
     packages = package_crud.get_packages(offset, limit, db)
+    logger.info("packages found")
     return packages
 
 
@@ -31,8 +36,10 @@ def get_packages(offset: int = 0, limit: int = 10, db: Session = Depends(databas
 def get_package_by_id(package_id, db: Session = Depends(database.get_db)):
     package = package_crud.get_package_by_id(package_id, db)
     if not package:
+        logger.warning("Package not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Package not found")
+    logger.info("Package Found") 
     return package
 
 # ## endpoint for updating packages
@@ -41,6 +48,7 @@ def update_package(package_id: int, payload: schema.PackageUpdate, db: Session =
 
     package = package_crud.get_package_by_id(package_id, db)
     if not package:
+        logger.warning("Package not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Package not found"
@@ -53,10 +61,12 @@ def update_package(package_id: int, payload: schema.PackageUpdate, db: Session =
     if user.role == admin_role:
         # ## update package
         updated_package = package_crud.update_package(package_id, payload, db)
+        logger.info(f"Package '{updated_package.name}' updated by user '{current_user.username}'")
         return updated_package
 
     # ## only user that created a package is allowed to edit a package
     if package.user_id != int(current_user.id):
+        logger.warning("Unauthorized user trying to edit package")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to perform this action!. Thank you."
@@ -64,4 +74,5 @@ def update_package(package_id: int, payload: schema.PackageUpdate, db: Session =
     
     # ## update package
     updated_package = package_crud.update_package(package_id, payload, db)
+    logger.info(f"Package '{updated_package.name}' updated by user '{current_user.username}'")
     return updated_package

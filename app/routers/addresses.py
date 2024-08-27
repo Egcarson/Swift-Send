@@ -4,10 +4,13 @@ from sqlalchemy.orm import Session
 from app import database, schema, oauth2
 from app.crud import users as user_crud
 from app.crud import addresses as address_crud
+from app.logs.logger import get_logger
 
 router = APIRouter(
     tags=["Address"]
 )
+
+logger = get_logger()
 
 # ## create user addresses
 
@@ -16,6 +19,7 @@ router = APIRouter(
 def create_user_address(address_payload: schema.AddressCreate, db: Session = Depends(database.get_db), current_user: schema.User = Depends(oauth2.get_current_user)):
     
     new_address = address_crud.create_address(user_id=current_user.id, address_payload=address_payload, db=db)
+    logger.info("New address created")
     return new_address
 
 # Get User addresses
@@ -25,6 +29,7 @@ def get_user_addresses(db: Session = Depends(database.get_db), current_user: sch
     user = user_crud.get_user_by_id(id=current_user.id, db=db)
     
     if not user:
+        logger.error("User not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
@@ -32,7 +37,9 @@ def get_user_addresses(db: Session = Depends(database.get_db), current_user: sch
 
     address = address_crud.get_address_by_id(user_id=current_user.id, db=db)
     if not address:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Address not found for this user")   
+        logger.error("Address not found for this user")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Address not found for this user")
+    logger.info("Address found for this user")  
     return address
 
 # update user address
@@ -42,6 +49,7 @@ def update_user_address(address_payload: schema.AddressUpdate, db: Session = Dep
     user = user_crud.get_user_by_id(id=current_user.id, db=db)
     
     if not user:
+        logger.error("User not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
@@ -50,11 +58,12 @@ def update_user_address(address_payload: schema.AddressUpdate, db: Session = Dep
     address = address_crud.get_address_by_id(user_id=current_user.id, db=db)
     
     if not address:
+        logger.error("Address not found for this user")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Address not found for this user"
         )
     
     updated_address = address_crud.update_address(user_id=current_user.id, address_payload=address_payload, db=db)
-    
+    logger.info("address updated")
     return updated_address
