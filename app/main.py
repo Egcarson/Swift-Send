@@ -4,7 +4,7 @@ from app.database import engine
 
 from app.routers import users, auth, addresses
 
-from app.routers import users, auth, packages, delivery
+from app.routers import users, auth, packages, delivery, courier
 
 
 # for pushing tables to the database. comment this out if you are using alembic
@@ -15,12 +15,11 @@ app = FastAPI()
 
 app.include_router(auth.router)
 app.include_router(users.router)
-
+app.include_router(courier.router)
 app.include_router(addresses.router)
 
 app.include_router(packages.router)
 app.include_router(delivery.router)
-
 
 
 @app.get("/")
