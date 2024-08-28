@@ -19,7 +19,7 @@ Welcome to SWIFT SEND, a delivery application designed to make sending and recei
 
 **SWIFT SEND** is developed using FastAPI, a modern and high-performance web framework for Python. This API supports comprehensive delivery management operations including user authentication, address management, package creation, and delivery tracking, making it ideal for any delivery-based application.
 
-### Shout Out to <a href="https://altschoolafrica.com/" target="_blank">Altschool</a>!
+### Shout Out to <a href="https://altschoolafrica.com/" target="_blank"  rel="noopener noreferrer">Altschool</a>!
 
 A big shout-out to **Altschool** for providing an exceptional platform that nurtures and develops tech talents. Their comprehensive and extensive training program equips aspiring developers with the necessary skills and knowledge to excel in the tech industry. **Altschool**'s commitment to hands-on learning, mentorship, and community support has prepared us to confidently tackle any challenges and resolve complex issues within the tech space. We are proud to be a part of this vibrant learning community that fosters innovation, creativity, and a passion for technology. This **API** was built by **Godprevail Eseh** and **Olalere Sherifdeen Abiodun**, two dedicated developers from the Altschool community..
 
