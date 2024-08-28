@@ -11,7 +11,8 @@ router = APIRouter(
 
 logger = get_logger()
 
-@router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=schema.User)
+
+@router.post('/signup/customer', status_code=status.HTTP_201_CREATED, response_model=schema.User)
 def create_user(user_payload: schema.UserCreate, db: Session = Depends(database.get_db)):
 
     #checking if the user exists or the email have been used already
@@ -34,7 +35,6 @@ def create_user(user_payload: schema.UserCreate, db: Session = Depends(database.
     
     ## setting up a password check instance
     if user_payload.first_name == user_payload.password or user_payload.last_name == user_payload.password or len(user_payload.password) == 7 or (user_payload.first_name + user_payload.last_name == user_payload.password) or user_payload.phone_number == user_payload.password:
-        logger.info("Password is too weak")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password is too weak! Please make it stronger for security reasons."

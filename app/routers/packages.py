@@ -76,3 +76,25 @@ def update_package(package_id: int, payload: schema.PackageUpdate, db: Session =
     updated_package = package_crud.update_package(package_id, payload, db)
     logger.info(f"Package '{updated_package.name}' updated by user '{current_user.username}'")
     return updated_package
+
+# ## endpoint for deleting packages
+@router.delete('/packages/{package_id}', status_code=status.HTTP_202_ACCEPTED)
+def delete_package(package_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+    #validate package
+    package = package_crud.get_package_by_id(package_id, db)
+    if not package:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Package not found"
+        )
+    
+    ## only creator of package can delete a package
+    if package.user_id != int(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to perform this action!. Thank you."
+        )
+    
+    package_crud.delete_package(package_id, db)
+    return {"message": "Package deleted successfully!"}

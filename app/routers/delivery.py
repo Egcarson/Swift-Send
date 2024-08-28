@@ -54,7 +54,7 @@ def get_deliveries(offset: int = 0, limit: int = 10, db: Session = Depends(datab
     logger.info("All delivery generated successfully")
     return deliveries
 
-# ## getting delivery by id
+# ## getting delivery by id to check the status
 @router.get('/deliveries/{delivery_id}', status_code=status.HTTP_200_OK, response_model=schema.Delivery)
 def get_delivery_by_id(delivery_id: int, db: Session = Depends(database.get_db)):
 
@@ -97,8 +97,42 @@ def update_delivery(delivery_id: int, payload: schema.DeliveryCreate, db: Sessio
     logger.info("Delivery updated successfully")
     return delivery_update
 
+# ## cancel delivery
+@router.delete('/deliveries/{delivery_id}', status_code=status.HTTP_202_ACCEPTED)
+def cancel_delivery(delivery_id: int, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+
+    delivery = delv_crud.get_delivery_by_id(delivery_id, db)
+    if not delivery:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Error! The delivery you are trying to cancel does not exist"
+        )
+    
+    # ## validate user - also allowing user that created the delivery to cancel it
+    user = user_crud.get_user_by_id(current_user.id, db)
+    
+    if delivery.user_id != int(current_user.id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not allowed to cancel this delivery."
+        )
+    
+    # checking if the delivery has already been cancelled
+    status_check = schema.DeliveryStatus.CANCELLED
+    if delivery.delivery_status == status_check:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error! Delivery has already been cancelled."
+        )
+    
+    # ## cancelling the delivery
+    delv_crud.cancel_delivery(delivery_id, db)
+
+    return {"message": "Delivery cancelled successfully!"}
+    
+
 ## status endpoints
-@router.put('/deliveries/status/{delivery_id}', status_code=status.HTTP_202_ACCEPTED, response_model=schema.Delivery)
+@router.put('/deliveries/status/{delivery_id}', status_code=status.HTTP_202_ACCEPTED)
 def update_delivery_status(delivery_id: int, payload: schema.DeliveryStatusUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
 
@@ -121,18 +155,18 @@ def update_delivery_status(delivery_id: int, payload: schema.DeliveryStatusUpdat
     if user.role != admin_user and user.role != courier_user:
         logger.warning ("Unauthenticated user")
         raise HTTPException(
-            status_code=406,
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Error! Please you are not allowed to perform this action."
         )
     
-    status = delv_crud.update_delivery_status(delivery_id, payload, db)
+    delv_crud.update_delivery_status(delivery_id, payload, db)
 
     logger.info("Delivery status updated successfully")
-    return status
+    return {"message": "Status updated successfully!"}
 
 # this endpoint is updating the delivery fee
-@router.put('/deliveries/delivery_fee/{delivery_id}', status_code=status.HTTP_202_ACCEPTED, response_model=schema.Delivery)
-def update_delivery_status(delivery_id: int, payload: schema.DeliveryCostUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@router.put('/deliveries/delivery_fee/{delivery_id}', status_code=status.HTTP_202_ACCEPTED)
+def assign_delivery_fee(delivery_id: int, payload: schema.DeliveryCostUpdate, db: Session = Depends(database.get_db), current_user: models.User = Depends(oauth2.get_current_user)):
 
 
     # validating delivery
@@ -141,7 +175,7 @@ def update_delivery_status(delivery_id: int, payload: schema.DeliveryCostUpdate,
     if not delivery:
         logger.warning('Delivery %s not found', delivery_id)
         raise HTTPException(
-            status_code=404, 
+            status_code=status.HTTP_404_NOT_FOUND, 
             detail="The delivery information you are trying to update does not exist"
         )
     
@@ -154,10 +188,10 @@ def update_delivery_status(delivery_id: int, payload: schema.DeliveryCostUpdate,
     if user.role != admin_user and user.role != courier_user:
         logger.warning ("Unauthenticated user")
         raise HTTPException(
-            status_code=406,
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail="Error! Please you are not allowed to perform this action."
         )
     
     delivery_fee = delv_crud.update_delivery_fee(delivery_id, payload, db)
-    logger.info("Delivery fee updated")
+
     return delivery_fee
