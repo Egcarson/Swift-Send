@@ -35,7 +35,7 @@ class User(Base):
     last_name = Column(String, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     phone_number = Column(String, nullable=False)
-    city = Column(String, nullable=True, server_default=text('Lagos'))
+    city = Column(String, nullable=True, default="Lagos")
     password = Column(String, nullable=False)
     role = Column(Enum(UserFunc), nullable=False, default=UserFunc.CUSTOMER)
     is_active = Column(Boolean, default=False)
@@ -51,7 +51,8 @@ class Address(Base):
     __tablename__ = "addresses"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
     address_line1 = Column(String, nullable=False)
     address_line2 = Column(String, nullable=True)
     city = Column(String, nullable=False)
@@ -60,14 +61,14 @@ class Address(Base):
     country = Column(String, nullable=False)
 
     user = relationship("User", back_populates="address")
-    
 
 
 class Package(Base):
     __tablename__ = "packages"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
     item_name = Column(String(255), nullable=False)
     weight = Column(Float, nullable=False)
     dimensions = Column(String)
@@ -81,8 +82,10 @@ class Delivery(Base):
     __tablename__ = "deliveries"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    package_id = Column(Integer, ForeignKey("packages.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    package_id = Column(Integer, ForeignKey(
+        "packages.id", ondelete="CASCADE"), nullable=False)
     delivery_status = Column(Enum(DeliveryStatus),
                              default=DeliveryStatus.PENDING)
     pickup_address_id = Column(

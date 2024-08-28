@@ -39,11 +39,8 @@ class UserCreate(UserBase):
     password: str
 
 
-class UserUpdate(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
-    phone_number: str
+class UserUpdate(UserBase):
+    pass
 
 
 class User(UserBase):

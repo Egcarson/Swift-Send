@@ -47,6 +47,18 @@ def update_delivery(delivery_id: int, payload: schema.DeliveryUpdate, db: Sessio
     db.refresh()
 
     return delivery
+    
+# ## cancel delivery
+def cancel_delivery(delivery_id: int, db: Session = Depends()) -> models.Delivery:
+    delivery = get_delivery_by_id(delivery_id, db)
+    if not delivery:
+        return None
+    
+    delivery.delivery_status = schema.DeliveryStatus.CANCELLED
+    db.commit()
+    db.refresh(delivery)
+    return delivery
+
 
 # ## status update
 def update_delivery_status(delivery_id: int, payload: schema.DeliveryStatusUpdate, db: Session = Depends()):

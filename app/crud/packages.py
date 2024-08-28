@@ -34,4 +34,12 @@ def update_package(package_id: int, payload: schema.PackageUpdate, db: Session =
     db.commit()
     db.refresh(package)
     return package
-    
+
+# ## deleting packages
+def delete_package(package_id: int, db: Session = Depends()):
+    package = get_package_by_id(package_id, db)
+    if not package:
+        return None
+    db.delete(package)
+    db.commit()
+    return package
