@@ -84,6 +84,7 @@ def delete_package(package_id: int, db: Session = Depends(database.get_db), curr
     #validate package
     package = package_crud.get_package_by_id(package_id, db)
     if not package:
+        logger.warning("Package not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Package not found"
@@ -91,10 +92,12 @@ def delete_package(package_id: int, db: Session = Depends(database.get_db), curr
     
     ## only creator of package can delete a package
     if package.user_id != int(current_user.id):
+        logger.warning("Unauthorized user trying to delete package")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not allowed to perform this action!. Thank you."
         )
     
     package_crud.delete_package(package_id, db)
+    logger.info(f"Package '{package.name}' deleted by user '{current_user.username}'")
     return {"message": "Package deleted successfully!"}
