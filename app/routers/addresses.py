@@ -4,16 +4,20 @@ from sqlalchemy.orm import Session
 from app import database, schema, oauth2
 from app.crud import users as user_crud
 from app.crud import addresses as address_crud
+from app.logs.logger import get_logger
 
 router = APIRouter(
     tags=["Address"]
 )
+
+logger = get_logger()
 
 # ## create user addresses
 @router.post('/address', status_code=status.HTTP_201_CREATED, response_model=schema.Address)
 def create_user_address(address_payload: schema.AddressCreate, db: Session = Depends(database.get_db), current_user: schema.User = Depends(oauth2.get_current_user)):
     
     new_address = address_crud.create_address(user_id=current_user.id, address_payload=address_payload, db=db)
+    logger.info("New address created")
     return new_address
 
 ## retrieving all addresses created by a user
@@ -24,6 +28,7 @@ def get_all_addresses(offset:int = 0, limit: int = 10, db: Session = Depends(dat
     user = user_crud.get_user_by_id(user_id, db)
    
     addresses = address_crud.get_addresses(offset, limit, user.id, db)
+    logger.info("Addresses for user generated")
     return addresses
 
 # Get User addresses
@@ -36,15 +41,17 @@ def get_user_address(address_id: int, db: Session = Depends(database.get_db), cu
     ## validate availability of address
     address = address_crud.get_address_by_id(address_id, user.id, db)
     
-    if not address:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Adress not found"
         )
-    
-    ## returns the requested address if found
-    address = address_crud.get_address_by_id(address_id, user.id, db)
- 
+
+    address = address_crud.get_address_by_id(user_id=current_user.id, db=db)
+    if not address:
+        logger.error("Address not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Address not found for this user")
+    logger.info("Address found")   
     return address
 
 # update user address
@@ -58,14 +65,15 @@ def update_user_address(address_id: int, address_payload: schema.AddressUpdate, 
     ## validate availability of address
     address = address_crud.get_address_by_id(address_id, user.id, db)
     
-    if not address:
+    if not user:
+        logger.error("Address not found for this user")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Please specify the right address id belonging to you!"
         )
     
     updated_address = address_crud.update_address(address_id, address_payload, user.id, db)
-    
+    logger.info("Address Updated: %s", updated_address)
     return updated_address
 
 # ## delete address
@@ -79,11 +87,12 @@ def delete_address(address_id: int, db: Session = Depends(database.get_db), curr
     address = address_crud.get_address_by_id(address_id, user.id, db)
     
     if not address:
+        logger.error("Address not found for this user")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Please specify the right address id belonging to you!"
         )
     
-    address_crud.delete_address(address_id, user.id, db)
-    
-    return {"message": "Address deleted successfully"}
+    updated_address = address_crud.update_address(user_id=current_user.id, address_payload=address_payload, db=db)
+    logger.info("Address Deleted")
+    return updated_address
